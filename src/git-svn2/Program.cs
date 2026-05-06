@@ -5,6 +5,7 @@ var root = new RootCommand("git svn2 is a simple conduit for changesets between 
 {
 	Subcommands = {
 		new InitCommand(),
+		new RemoteCommand(),
 	},
 };
 

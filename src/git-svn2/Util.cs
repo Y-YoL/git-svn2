@@ -7,6 +7,9 @@ namespace YoL.GitSvn2
 		public static ValueTask SetConfigAsync(string key, string value) =>
 			InvokeGitAsync("config", $"--local {key} {value}");
 
+		public static ValueTask AddConfigAsync(string key, string value) =>
+			InvokeGitAsync("config", $"--local --add {key} {value}");
+
 		public static ValueTask InvokeGitAsync(string command) =>
 			InvokeGitAsync(command, string.Empty);
 
