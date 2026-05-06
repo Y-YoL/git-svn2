@@ -10,15 +10,13 @@ public static class GitExecutorExtensions
 		public ValueTask SetConfigAsync(
 			string key,
 			string value,
-			string? workingDirectory = null,
 			CancellationToken cancellationToken = default) =>
-			executor.ExecuteAsync("config", $"--local {key} {value}", workingDirectory, cancellationToken);
+			executor.ExecuteAsync("config", $"--local {key} {value}", cancellationToken);
 
 		public ValueTask AddConfigAsync(
 			string key,
 			string value,
-			string? workingDirectory = null,
 			CancellationToken cancellationToken = default) =>
-			executor.ExecuteAsync("config", $"--local --add {key} {value}", workingDirectory, cancellationToken);
+			executor.ExecuteAsync("config", $"--local --add {key} {value}", cancellationToken);
 	}
 }

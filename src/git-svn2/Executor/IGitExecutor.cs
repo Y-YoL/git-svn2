@@ -15,6 +15,5 @@ public interface IGitExecutor
 	ValueTask ExecuteAsync(
 		string command,
 		string arguments,
-		string? workingDirectory = null,
 		CancellationToken cancellationToken = default);
 }

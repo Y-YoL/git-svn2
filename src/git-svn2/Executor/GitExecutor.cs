@@ -7,10 +7,16 @@ using System.Threading.Tasks;
 
 public sealed class GitExecutor : IGitExecutor
 {
+	private readonly Func<string>? workingDirectory;
+
+	public GitExecutor(Func<string>? workingDirectory = null)
+	{
+		this.workingDirectory = workingDirectory;
+	}
+
 	public async ValueTask ExecuteAsync(
 		string command,
 		string arguments,
-		string? workingDirectory = null,
 		CancellationToken cancellationToken = default)
 	{
 		var outputBuffer = new StringBuilder();
@@ -24,7 +30,7 @@ public sealed class GitExecutor : IGitExecutor
 				Arguments = string.IsNullOrWhiteSpace(arguments)
 					? command
 					: $"{command} {arguments}",
-				WorkingDirectory = workingDirectory ?? string.Empty,
+				WorkingDirectory = workingDirectory?.Invoke() ?? string.Empty,
 				RedirectStandardOutput = true,
 				RedirectStandardError = true,
 				UseShellExecute = false,

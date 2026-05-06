@@ -11,18 +11,15 @@ public class RemoteAddCommandTests
 	public async Task RemoteAddCommand_AddsRemoteConfigWithTagsByDefault()
 	{
 		var tempPath = CreateTemporaryRepository();
-		var previousDirectory = Directory.GetCurrentDirectory();
 
 		try
 		{
-			Directory.SetCurrentDirectory(tempPath);
-
 			var root = new RootCommand
 			{
-				new RemoteAddCommand(new GitExecutor())
+				new RemoteAddCommand(new GitExecutor(() => tempPath))
 			};
 
-			var args = new[] { "add", "origin", "https://example.com/svn" };
+			string[] args = ["add", "origin", "https://example.com/svn"];
 			var parseResult = root.Parse(args);
 			var exitCode = await parseResult.InvokeAsync(cancellationToken: TestContext.Current.CancellationToken);
 
@@ -37,7 +34,6 @@ public class RemoteAddCommandTests
 		}
 		finally
 		{
-			Directory.SetCurrentDirectory(previousDirectory);
 			DeleteDirectory(tempPath);
 		}
 	}
@@ -46,18 +42,15 @@ public class RemoteAddCommandTests
 	public async Task RemoteAddCommand_AddsNoTagsOptionWhenSpecified()
 	{
 		var tempPath = CreateTemporaryRepository();
-		var previousDirectory = Directory.GetCurrentDirectory();
 
 		try
 		{
-			Directory.SetCurrentDirectory(tempPath);
-
 			var root = new RootCommand
 			{
-				new RemoteAddCommand(new GitExecutor())
+				new RemoteAddCommand(new GitExecutor(() => tempPath))
 			};
 
-			var args = new[] { "add", "origin", "https://example.com/svn", "--no-tags" };
+			string[] args = ["add", "origin", "https://example.com/svn", "--no-tags"];
 			var parseResult = root.Parse(args);
 			var exitCode = await parseResult.InvokeAsync(cancellationToken: TestContext.Current.CancellationToken);
 
@@ -67,7 +60,6 @@ public class RemoteAddCommandTests
 		}
 		finally
 		{
-			Directory.SetCurrentDirectory(previousDirectory);
 			DeleteDirectory(tempPath);
 		}
 	}
