@@ -18,7 +18,7 @@ internal class InitCommand : Command
 
 	private async Task<int> ExecuteAsync(ParseResult result, CancellationToken cancellationToken)
 	{
-		await this.executor.InvokeGitAsync("init", "-q", cancellationToken: cancellationToken);
+		await this.executor.ExecuteAsync("init", "-q", cancellationToken: cancellationToken);
 
 		return 0;
 	}
