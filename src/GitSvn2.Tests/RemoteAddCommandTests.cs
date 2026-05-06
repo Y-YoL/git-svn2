@@ -1,153 +1,156 @@
 using System.CommandLine;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using Xunit;
 using YoL.GitSvn2.Commands.Remote;
 
-namespace GitSvn2.Tests
+namespace YoL.GitSvn2.Tests;
+
+public class RemoteAddCommandTests
 {
-    public class RemoteAddCommandTests
-    {
-        [Fact]
-        public async Task RemoteAddCommand_AddsRemoteConfigWithTagsByDefault()
-        {
-            var tempPath = CreateTemporaryRepository();
-            var previousDirectory = Directory.GetCurrentDirectory();
+	[Fact]
+	public async Task RemoteAddCommand_AddsRemoteConfigWithTagsByDefault()
+	{
+		var tempPath = CreateTemporaryRepository();
+		var previousDirectory = Directory.GetCurrentDirectory();
 
-            try
-            {
-                Directory.SetCurrentDirectory(tempPath);
+		try
+		{
+			Directory.SetCurrentDirectory(tempPath);
 
-                var root = new RootCommand();
-                root.Add(new RemoteAddCommand());
+			var root = new RootCommand
+			{
+				new RemoteAddCommand()
+			};
 
-                var args = new[] { "add", "origin", "https://example.com/svn" };
-                var parseResult = root.Parse(args);
-                var exitCode = await parseResult.InvokeAsync();
+			var args = new[] { "add", "origin", "https://example.com/svn" };
+			var parseResult = root.Parse(args);
+			var exitCode = await parseResult.InvokeAsync(cancellationToken: TestContext.Current.CancellationToken);
 
-                Assert.Equal(0, exitCode);
-                Assert.Equal("https://example.com/svn", GetGitConfig(tempPath, "svn2-remote.origin.url"));
+			Assert.Equal(0, exitCode);
+			Assert.Equal("https://example.com/svn", GetGitConfig(tempPath, "svn2-remote.origin.url"));
 
-                var fetchValues = GetGitConfigAll(tempPath, "svn2-remote.origin.fetch");
-                Assert.Contains("+trunk:refs/remotes/origin/trunk", fetchValues);
-                Assert.Contains("+branches/*:refs/remotes/origin/*", fetchValues);
+			var fetchValues = GetGitConfigAll(tempPath, "svn2-remote.origin.fetch");
+			Assert.Contains("+trunk:refs/remotes/origin/trunk", fetchValues);
+			Assert.Contains("+branches/*:refs/remotes/origin/*", fetchValues);
 
-                Assert.False(TryGetGitConfig(tempPath, "svn2-remote.origin.tagOpt", out _));
-            }
-            finally
-            {
-                Directory.SetCurrentDirectory(previousDirectory);
-                DeleteDirectory(tempPath);
-            }
-        }
+			Assert.False(TryGetGitConfig(tempPath, "svn2-remote.origin.tagOpt", out _));
+		}
+		finally
+		{
+			Directory.SetCurrentDirectory(previousDirectory);
+			DeleteDirectory(tempPath);
+		}
+	}
 
-        [Fact]
-        public async Task RemoteAddCommand_AddsNoTagsOptionWhenSpecified()
-        {
-            var tempPath = CreateTemporaryRepository();
-            var previousDirectory = Directory.GetCurrentDirectory();
+	[Fact]
+	public async Task RemoteAddCommand_AddsNoTagsOptionWhenSpecified()
+	{
+		var tempPath = CreateTemporaryRepository();
+		var previousDirectory = Directory.GetCurrentDirectory();
 
-            try
-            {
-                Directory.SetCurrentDirectory(tempPath);
+		try
+		{
+			Directory.SetCurrentDirectory(tempPath);
 
-                var root = new RootCommand();
-                root.Add(new RemoteAddCommand());
+			var root = new RootCommand
+			{
+				new RemoteAddCommand()
+			};
 
-                var args = new[] { "add", "origin", "https://example.com/svn", "--no-tags" };
-                var parseResult = root.Parse(args);
-                var exitCode = await parseResult.InvokeAsync();
+			var args = new[] { "add", "origin", "https://example.com/svn", "--no-tags" };
+			var parseResult = root.Parse(args);
+			var exitCode = await parseResult.InvokeAsync(cancellationToken: TestContext.Current.CancellationToken);
 
-                Assert.Equal(0, exitCode);
-                Assert.Equal("https://example.com/svn", GetGitConfig(tempPath, "svn2-remote.origin.url"));
-                Assert.Equal("--no-tags", GetGitConfig(tempPath, "svn2-remote.origin.tagOpt"));
-            }
-            finally
-            {
-                Directory.SetCurrentDirectory(previousDirectory);
-                DeleteDirectory(tempPath);
-            }
-        }
+			Assert.Equal(0, exitCode);
+			Assert.Equal("https://example.com/svn", GetGitConfig(tempPath, "svn2-remote.origin.url"));
+			Assert.Equal("--no-tags", GetGitConfig(tempPath, "svn2-remote.origin.tagOpt"));
+		}
+		finally
+		{
+			Directory.SetCurrentDirectory(previousDirectory);
+			DeleteDirectory(tempPath);
+		}
+	}
 
-        private static string CreateTemporaryRepository()
-        {
-            var tempPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-            Directory.CreateDirectory(tempPath);
-            RunGitCommand(tempPath, "init -q");
-            return tempPath;
-        }
+	private static string CreateTemporaryRepository()
+	{
+		var tempPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+		Directory.CreateDirectory(tempPath);
+		RunGitCommand(tempPath, "init -q");
+		return tempPath;
+	}
 
-        private static string GetGitConfig(string workingDirectory, string key)
-        {
-            var result = RunGitCommand(workingDirectory, $"config --local --get {key}");
-            if (result.ExitCode != 0)
-            {
-                throw new InvalidOperationException($"Could not read git config key '{key}'. Output: {result.Output} Error: {result.Error}");
-            }
+	private static string GetGitConfig(string workingDirectory, string key)
+	{
+		var result = RunGitCommand(workingDirectory, $"config --local --get {key}");
+		if (result.ExitCode != 0)
+		{
+			throw new InvalidOperationException($"Could not read git config key '{key}'. Output: {result.Output} Error: {result.Error}");
+		}
 
-            return result.Output.Trim();
-        }
+		return result.Output.Trim();
+	}
 
-        private static string[] GetGitConfigAll(string workingDirectory, string key)
-        {
-            var result = RunGitCommand(workingDirectory, $"config --local --get-all {key}");
-            if (result.ExitCode != 0)
-            {
-                throw new InvalidOperationException($"Could not read git config key '{key}'. Output: {result.Output} Error: {result.Error}");
-            }
+	private static string[] GetGitConfigAll(string workingDirectory, string key)
+	{
+		var result = RunGitCommand(workingDirectory, $"config --local --get-all {key}");
+		if (result.ExitCode != 0)
+		{
+			throw new InvalidOperationException($"Could not read git config key '{key}'. Output: {result.Output} Error: {result.Error}");
+		}
 
-            return result.Output
-                .Split(new[] { '\r', '\n' }, System.StringSplitOptions.RemoveEmptyEntries)
-                .Select(value => value.Trim())
-                .ToArray();
-        }
+		return result.Output
+			.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+			.Select(value => value.Trim())
+			.ToArray();
+	}
 
-        private static bool TryGetGitConfig(string workingDirectory, string key, out string value)
-        {
-            var result = RunGitCommand(workingDirectory, $"config --local --get {key}");
-            if (result.ExitCode == 0)
-            {
-                value = result.Output.Trim();
-                return true;
-            }
+	private static bool TryGetGitConfig(string workingDirectory, string key, out string value)
+	{
+		var result = RunGitCommand(workingDirectory, $"config --local --get {key}");
+		if (result.ExitCode == 0)
+		{
+			value = result.Output.Trim();
+			return true;
+		}
 
-            value = string.Empty;
-            return false;
-        }
+		value = string.Empty;
+		return false;
+	}
 
-        private static void DeleteDirectory(string directory)
-        {
-            if (Directory.Exists(directory))
-            {
-                Directory.Delete(directory, recursive: true);
-            }
-        }
+	private static void DeleteDirectory(string directory)
+	{
+		if (Directory.Exists(directory))
+		{
+			Directory.Delete(directory, recursive: true);
+		}
+	}
 
-        private static GitResult RunGitCommand(string workingDirectory, string arguments)
-        {
-            using var process = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = "git",
-                    Arguments = arguments,
-                    WorkingDirectory = workingDirectory,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                }
-            };
+	private static GitResult RunGitCommand(string workingDirectory, string arguments)
+	{
+		using var process = new Process
+		{
+			StartInfo = new ProcessStartInfo
+			{
+				FileName = "git",
+				Arguments = arguments,
+				WorkingDirectory = workingDirectory,
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				UseShellExecute = false,
+				CreateNoWindow = true,
+			}
+		};
 
-            process.Start();
-            var output = process.StandardOutput.ReadToEnd();
-            var error = process.StandardError.ReadToEnd();
-            process.WaitForExit();
+		process.Start();
+		var output = process.StandardOutput.ReadToEnd();
+		var error = process.StandardError.ReadToEnd();
+		process.WaitForExit();
 
-            return new GitResult(process.ExitCode, output, error);
-        }
+		return new GitResult(process.ExitCode, output, error);
+	}
 
-        private sealed record GitResult(int ExitCode, string Output, string Error);
-    }
+	private sealed record GitResult(
+		int ExitCode,
+		string Output,
+		string Error);
 }
