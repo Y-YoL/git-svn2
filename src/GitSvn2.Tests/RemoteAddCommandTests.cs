@@ -2,7 +2,6 @@ using System.CommandLine;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using Xunit;
 using YoL.GitSvn2.Commands.Remote;
 
@@ -14,27 +13,20 @@ namespace GitSvn2.Tests
         public async Task RemoteAddCommand_AddsRemoteConfigWithTagsByDefault()
         {
             var tempPath = CreateTemporaryRepository();
+            var previousDirectory = Directory.GetCurrentDirectory();
 
             try
             {
+                Directory.SetCurrentDirectory(tempPath);
+
                 var root = new RootCommand();
                 root.Add(new RemoteAddCommand());
 
                 var args = new[] { "add", "origin", "https://example.com/svn" };
-                var previousDirectory = Directory.GetCurrentDirectory();
-                Directory.SetCurrentDirectory(tempPath);
+                var parseResult = root.Parse(args);
+                var exitCode = await parseResult.InvokeAsync();
 
-                try
-                {
-                    var parseResult = root.Parse(args);
-                    var exitCode = await parseResult.InvokeAsync();
-                    Assert.Equal(0, exitCode);
-                }
-                finally
-                {
-                    Directory.SetCurrentDirectory(previousDirectory);
-                }
-
+                Assert.Equal(0, exitCode);
                 Assert.Equal("https://example.com/svn", GetGitConfig(tempPath, "svn2-remote.origin.url"));
 
                 var fetchValues = GetGitConfigAll(tempPath, "svn2-remote.origin.fetch");
@@ -45,6 +37,7 @@ namespace GitSvn2.Tests
             }
             finally
             {
+                Directory.SetCurrentDirectory(previousDirectory);
                 DeleteDirectory(tempPath);
             }
         }
@@ -53,32 +46,26 @@ namespace GitSvn2.Tests
         public async Task RemoteAddCommand_AddsNoTagsOptionWhenSpecified()
         {
             var tempPath = CreateTemporaryRepository();
+            var previousDirectory = Directory.GetCurrentDirectory();
 
             try
             {
+                Directory.SetCurrentDirectory(tempPath);
+
                 var root = new RootCommand();
                 root.Add(new RemoteAddCommand());
 
                 var args = new[] { "add", "origin", "https://example.com/svn", "--no-tags" };
-                var previousDirectory = Directory.GetCurrentDirectory();
-                Directory.SetCurrentDirectory(tempPath);
+                var parseResult = root.Parse(args);
+                var exitCode = await parseResult.InvokeAsync();
 
-                try
-                {
-                    var parseResult = root.Parse(args);
-                    var exitCode = await parseResult.InvokeAsync();
-                    Assert.Equal(0, exitCode);
-                }
-                finally
-                {
-                    Directory.SetCurrentDirectory(previousDirectory);
-                }
-
+                Assert.Equal(0, exitCode);
                 Assert.Equal("https://example.com/svn", GetGitConfig(tempPath, "svn2-remote.origin.url"));
                 Assert.Equal("--no-tags", GetGitConfig(tempPath, "svn2-remote.origin.tagOpt"));
             }
             finally
             {
+                Directory.SetCurrentDirectory(previousDirectory);
                 DeleteDirectory(tempPath);
             }
         }
@@ -94,7 +81,7 @@ namespace GitSvn2.Tests
         private static string GetGitConfig(string workingDirectory, string key)
         {
             var result = RunGitCommand(workingDirectory, $"config --local --get {key}");
-            if (result.ExitCode is not 0)
+            if (result.ExitCode != 0)
             {
                 throw new InvalidOperationException($"Could not read git config key '{key}'. Output: {result.Output} Error: {result.Error}");
             }
@@ -105,13 +92,13 @@ namespace GitSvn2.Tests
         private static string[] GetGitConfigAll(string workingDirectory, string key)
         {
             var result = RunGitCommand(workingDirectory, $"config --local --get-all {key}");
-            if (result.ExitCode is not 0)
+            if (result.ExitCode != 0)
             {
                 throw new InvalidOperationException($"Could not read git config key '{key}'. Output: {result.Output} Error: {result.Error}");
             }
 
             return result.Output
-                .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+                .Split(new[] { '\r', '\n' }, System.StringSplitOptions.RemoveEmptyEntries)
                 .Select(value => value.Trim())
                 .ToArray();
         }
@@ -119,7 +106,7 @@ namespace GitSvn2.Tests
         private static bool TryGetGitConfig(string workingDirectory, string key, out string value)
         {
             var result = RunGitCommand(workingDirectory, $"config --local --get {key}");
-            if (result.ExitCode is 0)
+            if (result.ExitCode == 0)
             {
                 value = result.Output.Trim();
                 return true;

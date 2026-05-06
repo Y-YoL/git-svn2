@@ -33,15 +33,15 @@ internal class RemoteAddCommand : Command
 
 		var tags = !result.GetValue(NoTagsOption);
 
-		await Util.SetConfigAsync($"svn2-remote.${name}.url", url);
+		await Util.SetConfigAsync($"svn2-remote.{name}.url", url);
 
-		var key = $"svn2-remote.${name}.fetch";
+		var key = $"svn2-remote.{name}.fetch";
 		await Util.SetConfigAsync(key, $"+trunk:refs/remotes/{name}/trunk");
 		await Util.AddConfigAsync(key, $"+branches/*:refs/remotes/{name}/*");
 
 		if (!tags)
 		{
-			await Util.AddConfigAsync($"svn2-remote.${name}.tagOpt", "--no-tags");
+			await Util.AddConfigAsync($"svn2-remote.{name}.tagOpt", "--no-tags");
 		}
 
 		return 0;
