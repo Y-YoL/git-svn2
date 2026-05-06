@@ -1,3 +1,4 @@
 <Solution>
   <Project Path="src/git-svn2/git-svn2.csproj" />
+  <Project Path="src/GitSvn2.Tests/GitSvn2.Tests.csproj" Id="a7d8bd90-a458-4da9-b8eb-e59953b6b0d7" />
 </Solution>
