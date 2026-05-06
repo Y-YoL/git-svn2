@@ -1,20 +1,24 @@
 using System.CommandLine;
+using YoL.GitSvn2.Executor;
 
 namespace YoL.GitSvn2.Commands;
 
 internal class InitCommand : Command
 {
-	public InitCommand()
+	private readonly IGitExecutor executor;
+
+	public InitCommand(IGitExecutor executor)
 		: base(
 			"init",
 			"Initializes an empty Git repository with additional metadata directories for git svn.")
 	{
+		this.executor = executor;
 		this.SetAction(this.ExecuteAsync);
 	}
 
 	private async Task<int> ExecuteAsync(ParseResult result, CancellationToken cancellationToken)
 	{
-		await Util.InvokeGitAsync("init -q");
+		await this.executor.InvokeGitAsync("init", "-q", cancellationToken: cancellationToken);
 
 		return 0;
 	}

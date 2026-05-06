@@ -1,4 +1,5 @@
 using System.CommandLine;
+using YoL.GitSvn2.Executor;
 
 namespace YoL.GitSvn2.Commands.Remote;
 
@@ -13,11 +14,14 @@ internal class RemoteAddCommand : Command
 		DefaultValueFactory = _ => false,
 	};
 
-	public RemoteAddCommand() :
+	private readonly IGitExecutor executor;
+
+	public RemoteAddCommand(IGitExecutor executor) :
 		base(
 			"add",
 			$$"""Add a remote named <name> for the repository at <URL>.""")
 	{
+		this.executor = executor;
 		this.Options.Add(NoTagsOption);
 
 		this.Arguments.Add(NameArgument);
@@ -33,15 +37,15 @@ internal class RemoteAddCommand : Command
 
 		var tags = !result.GetValue(NoTagsOption);
 
-		await Util.SetConfigAsync($"svn2-remote.{name}.url", url);
+		await this.executor.SetConfigAsync($"svn2-remote.{name}.url", url, cancellationToken: cancellationToken);
 
 		var key = $"svn2-remote.{name}.fetch";
-		await Util.SetConfigAsync(key, $"+trunk:refs/remotes/{name}/trunk");
-		await Util.AddConfigAsync(key, $"+branches/*:refs/remotes/{name}/*");
+		await this.executor.SetConfigAsync(key, $"+trunk:refs/remotes/{name}/trunk", cancellationToken: cancellationToken);
+		await this.executor.AddConfigAsync(key, $"+branches/*:refs/remotes/{name}/*", cancellationToken: cancellationToken);
 
 		if (!tags)
 		{
-			await Util.AddConfigAsync($"svn2-remote.{name}.tagOpt", "--no-tags");
+			await this.executor.AddConfigAsync($"svn2-remote.{name}.tagOpt", "--no-tags", cancellationToken: cancellationToken);
 		}
 
 		return 0;

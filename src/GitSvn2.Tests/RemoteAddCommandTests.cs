@@ -1,6 +1,7 @@
 using System.CommandLine;
 using System.Diagnostics;
 using YoL.GitSvn2.Commands.Remote;
+using YoL.GitSvn2.Executor;
 
 namespace YoL.GitSvn2.Tests;
 
@@ -18,7 +19,7 @@ public class RemoteAddCommandTests
 
 			var root = new RootCommand
 			{
-				new RemoteAddCommand()
+				new RemoteAddCommand(new GitExecutor())
 			};
 
 			var args = new[] { "add", "origin", "https://example.com/svn" };
@@ -53,7 +54,7 @@ public class RemoteAddCommandTests
 
 			var root = new RootCommand
 			{
-				new RemoteAddCommand()
+				new RemoteAddCommand(new GitExecutor())
 			};
 
 			var args = new[] { "add", "origin", "https://example.com/svn", "--no-tags" };
